@@ -1,0 +1,10 @@
+version: "3.8"
+
+services:
+  google-maps-mcp:
+    build: .
+    environment:
+      - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
+      - LOG_LEVEL=INFO
+    stdin_open: true
+    tty: true
