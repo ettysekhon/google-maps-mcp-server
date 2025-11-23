@@ -1,4 +1,4 @@
-# 🗺️ Google Maps MCP Server
+# Google Maps MCP Server
 
 [![PyPI](https://img.shields.io/pypi/v/google-maps-mcp-server.svg)](https://pypi.org/project/google-maps-mcp-server/)
 [![Python Version](https://img.shields.io/pypi/pyversions/google-maps-mcp-server.svg)](https://pypi.org/project/google-maps-mcp-server/)
@@ -14,25 +14,25 @@ Empower your AI agents with real-world location intelligence: directions, places
 
 ---
 
-## ✨ Features
+## Features
 
-- 🚀 **Production-Ready**: Robust error handling, automatic retries with exponential backoff, structured logging
-- 🔌 **Universal Integration**: Works with Claude Desktop, Google ADK, and any MCP-compatible client
-- 🛠️ **Comprehensive API Coverage**: 7 tools spanning all major Google Maps APIs
-- 🔒 **Type-Safe**: Full type annotations with Pydantic validation and mypy compliance
-- 📦 **Zero Configuration**: Sensible defaults, works out of the box
-- 🧪 **Thoroughly Tested**: >90% code coverage with unit and integration tests
-- 🐳 **Docker Support**: Ready-to-deploy container images
-- 📖 **Excellent Documentation**: Extensive examples, API reference, and best practices
-- ⚡ **Modern Python**: Built for Python 3.10+ using uv package manager
+- **Production-Ready**: Robust error handling, automatic retries with exponential backoff, structured logging
+- **Universal Integration**: Works with Claude Desktop, Google ADK, and any MCP-compatible client
+- **Comprehensive API Coverage**: 7 tools spanning all major Google Maps APIs
+- **Type-Safe**: Full type annotations with Pydantic validation and mypy compliance
+- **Zero Configuration**: Sensible defaults, works out of the box
+- **Thoroughly Tested**: >90% code coverage with unit and integration tests
+- **Docker Support**: Ready-to-deploy container images
+- **Excellent Documentation**: Extensive examples, API reference, and best practices
+- **Modern Python**: Built for Python 3.10+ using uv package manager
 
 ---
 
-## 🎯 Supported APIs & Tools
+## Supported APIs & Tools
 
 | API | Tool | Description | Use Cases |
 |-----|------|-------------|-----------|
-| **Places API** | `search_nearby_places` | Find points of interest near a location | Restaurant recommendations, gas station finder, POI search |
+| **Places API** | `search_places` | Find points of interest near a location | Restaurant recommendations, gas station finder, POI search |
 | **Directions API** | `get_directions` | Get routes with real-time traffic | Route planning, ETA calculation, alternative routes |
 | **Geocoding API** | `geocode_address` | Convert addresses to coordinates | Address validation, location lookup |
 | **Geocoding API** | `reverse_geocode` | Convert coordinates to addresses | Location identification, address lookup |
@@ -42,7 +42,7 @@ Empower your AI agents with real-world location intelligence: directions, places
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -92,7 +92,9 @@ uv sync
 Create a `.env` file in your working directory:
 
 ```bash
-GOOGLE_MAPS_API_KEY=your_actual_api_key_here
+GOOGLE_MAPS_API_KEY=your_maps_api_key_here
+GOOGLE_API_KEY=your_adk_api_key_here
+
 LOG_LEVEL=INFO
 MAX_RESULTS=20
 ```
@@ -100,7 +102,8 @@ MAX_RESULTS=20
 Or set environment variables:
 
 ```bash
-export GOOGLE_MAPS_API_KEY="your_actual_api_key_here"
+export GOOGLE_MAPS_API_KEY="your_maps_api_key_here"
+export GOOGLE_API_KEY="your_adk_api_key_here"
 ```
 
 ### Run the Server
@@ -118,7 +121,7 @@ uv run google-maps-mcp-server
 
 ---
 
-## 💡 Usage Examples
+## Usage Examples
 
 ### With Claude Desktop
 
@@ -251,7 +254,8 @@ docker build -t google-maps-mcp .
 
 # Run the container
 docker run -it \
-  -e GOOGLE_MAPS_API_KEY=your_api_key_here \
+  -e GOOGLE_MAPS_API_KEY=your_maps_key_here \
+  -e GOOGLE_API_KEY=your_adk_key_here \
   google-maps-mcp
 
 # Or use docker-compose
@@ -260,13 +264,14 @@ docker-compose up
 
 ---
 
-## 🔧 Configuration Options
+## Configuration Options
 
 All configuration can be set via environment variables or `.env` file:
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `GOOGLE_MAPS_API_KEY` | string | **required** | Your Google Maps API key |
+| `GOOGLE_MAPS_API_KEY` | string | **required** | Google Maps Platform API key (for Maps tools) |
+| `GOOGLE_API_KEY` | string | **required** | Google ADK API key (for ADK integration) |
 | `LOG_LEVEL` | string | `INFO` | Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL) |
 | `MAX_RESULTS` | integer | `20` | Maximum results to return (1-60) |
 | `DEFAULT_RADIUS_METERS` | integer | `5000` | Default search radius in meters |
@@ -277,9 +282,9 @@ All configuration can be set via environment variables or `.env` file:
 
 ---
 
-## 📚 Tool Documentation
+## Tool Documentation
 
-### `search_nearby_places`
+### `search_places`
 
 Find places near a location.
 
@@ -414,20 +419,18 @@ Get speed limit data for road segments.
 **Parameters:**
 
 - `place_ids` (required): Array of place IDs from snap_to_roads
-- `units` (optional): "KPH" (default) or "MPH"
 
 **Example:**
 
 ```json
 {
-  "place_ids": ["ChIJwQ2rKwAEdkgRo7h2RYD1oUM"],
-  "units": "MPH"
+  "place_ids": ["ChIJwQ2rKwAEdkgRo7h2RYD1oUM"]
 }
 ```
 
 ---
 
-## 🏗️ Development
+## Development
 
 ### Setup Development Environment
 
@@ -502,7 +505,7 @@ docker build -t google-maps-mcp-server:latest .
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
@@ -519,7 +522,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 ---
 
-## 📋 API Limits and Pricing
+## API Limits and Pricing
 
 This MCP server uses Google Maps Platform APIs which have the following considerations:
 
@@ -538,7 +541,7 @@ See [Google Maps Platform Pricing](https://mapsplatform.google.com/pricing/) for
 
 ---
 
-## 🔐 Security Best Practices
+## Security Best Practices
 
 1. **API Key Security:**
    - Never commit API keys to version control
@@ -565,7 +568,7 @@ See [Google Maps Platform Pricing](https://mapsplatform.google.com/pricing/) for
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -601,13 +604,13 @@ google-maps-mcp-server
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Built with [MCP](https://modelcontextprotocol.io) by Anthropic
 - Powered by [Google Maps Platform](https://developers.google.com/maps)
@@ -616,13 +619,13 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ---
 
-## ⭐ Star History
+## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=ettysekhon/google-maps-mcp-server&type=Date)](https://star-history.com/#ettysekhon/google-maps-mcp-server&Date)
 
 ---
 
-## 📊 Project Stats
+## Project Stats
 
 ![GitHub stars](https://img.shields.io/github/stars/ettysekhon/google-maps-mcp-server?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/ettysekhon/google-maps-mcp-server?style=social)

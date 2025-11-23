@@ -19,7 +19,7 @@ The Google Maps MCP Server provides 7 tools across 5 Google Maps Platform APIs:
 
 | Tool Name | API | Purpose |
 |-----------|-----|---------|
-| `search_nearby_places` | Places API | Find POIs near a location |
+| `search_places` | Places API | Find POIs near a location |
 | `get_directions` | Directions API | Get routes with traffic |
 | `geocode_address` | Geocoding API | Address → Coordinates |
 | `reverse_geocode` | Geocoding API | Coordinates → Address |
@@ -31,7 +31,7 @@ The Google Maps MCP Server provides 7 tools across 5 Google Maps Platform APIs:
 
 ## Places API
 
-### search_nearby_places
+### search_places
 
 Search for places near a specific location.
 
@@ -74,7 +74,7 @@ Common place types:
 ```json
 {
   "status": "success",
-  "tool": "search_nearby_places",
+  "tool": "search_places",
   "data": {
     "places": [
       {
@@ -441,7 +441,6 @@ Get speed limit information for road segments.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `place_ids` | array | Yes | Place IDs from snap_to_roads |
-| `units` | string | No | "KPH" or "MPH" (default: "KPH") |
 
 #### Request Example
 
@@ -450,8 +449,7 @@ Get speed limit information for road segments.
   "place_ids": [
     "ChIJNwVFswe2woARUXfAcXJHxwU",
     "ChIJQVrGw wm2woARU_VBoPPVnKM"
-  ],
-  "units": "MPH"
+  ]
 }
 ```
 

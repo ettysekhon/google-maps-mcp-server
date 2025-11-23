@@ -1,3 +1,8 @@
+# Git
+.git
+.gitignore
+.github
+
 # Python
 __pycache__/
 *.py[cod]
@@ -25,18 +30,15 @@ MANIFEST
 venv/
 env/
 ENV/
-.venv
-
-# uv
-.python-version
+.venv/
 
 # Testing
 .pytest_cache/
 .coverage
 htmlcov/
 coverage.xml
-*.cover
 .hypothesis/
+tests/
 
 # IDEs
 .vscode/
@@ -55,9 +57,5 @@ coverage.xml
 *.log
 
 # Documentation
-docs/_build/
+docs/
 site/
-
-# Distribution
-*.tar.gz
-*.whl

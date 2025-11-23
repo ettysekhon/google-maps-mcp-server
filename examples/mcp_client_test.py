@@ -49,7 +49,7 @@ async def test_mcp_server() -> None:
             # Test each tool
             test_cases = [
                 {
-                    "name": "search_nearby_places",
+                    "name": "search_places",
                     "args": {"location": "40.7580,-73.9855", "keyword": "pizza", "radius": 500},
                 },
                 {
