@@ -201,38 +201,45 @@ class GPSTraceAnalyzer:
         print("FLEET SAFETY ANALYSIS REPORT")
         print("=" * 80)
         print()
-        print(f"Vehicle ID: {report['vehicle_id']}")
-        print(f"Timestamp: {report['timestamp']}")
-        print(f"Compliance Score: {report['compliance_score']:.1f}/100")
-        print()
-
-        print("Trace Summary:")
-        print(f"  GPS Points: {report['trace_length']}")
-        print(f"  Snapped Points: {report['snapped_points']}")
-        print(f"  Violations: {len(report['violations'])}")
-        print()
-
-        if report["violations"]:
-            print("Violations Detected:")
+        if "vehicle_id" in report:
+            print(f"Vehicle ID: {report['vehicle_id']}")
+        else:
+            print("Vehicle ID: N/A")
+        if "timestamp" in report:
+            print(f"Timestamp: {report['timestamp']}")
+        else:
+            print("Timestamp: N/A")
+        if "compliance_score" in report:
+            print(f"Compliance Score: {report['compliance_score']:.1f}/100")
             print()
-            for i, violation in enumerate(report["violations"][:5], 1):  # Show first 5
-                print(f"  {i}. [{violation['severity']}] Location: {violation['location']}")
-                print(f"     Speed Limit: {violation['speed_limit']} MPH")
-                print(f"     Vehicle Speed: {violation['vehicle_speed']} MPH")
-                print(
-                    f"     Overage: {violation['overage']:.1f} MPH ({violation['overage_percent']:.1f}%)"
-                )
-                print()
 
-            if len(report["violations"]) > 5:
-                print(f"  ... and {len(report['violations']) - 5} more violations")
-                print()
+            print("Trace Summary:")
+            print(f"  GPS Points: {report['trace_length']}")
+            print(f"  Snapped Points: {report['snapped_points']}")
+            print(f"  Violations: {len(report['violations'])}")
+            print()
 
-        print("Recommendations:")
-        for rec in report["recommendations"]:
-            print(f"  • {rec}")
-        print()
-        print("=" * 80)
+            if report["violations"]:
+                print("Violations Detected:")
+                print()
+                for i, violation in enumerate(report["violations"][:5], 1):  # Show first 5
+                    print(f"  {i}. [{violation['severity']}] Location: {violation['location']}")
+                    print(f"     Speed Limit: {violation['speed_limit']} MPH")
+                    print(f"     Vehicle Speed: {violation['vehicle_speed']} MPH")
+                    print(
+                        f"     Overage: {violation['overage']:.1f} MPH ({violation['overage_percent']:.1f}%)"
+                    )
+                    print()
+
+                if len(report["violations"]) > 5:
+                    print(f"  ... and {len(report['violations']) - 5} more violations")
+                    print()
+
+            print("Recommendations:")
+            for rec in report["recommendations"]:
+                print(f"  • {rec}")
+            print()
+            print("=" * 80)
 
 
 async def main() -> None:

@@ -9,15 +9,17 @@ import asyncio
 import os
 from typing import Any
 
-from dotenv import load_dotenv
+from dotenv import find_dotenv, load_dotenv
 
 # Note: This example requires Google ADK to be installed
 # pip install google-adk
 
 try:
     from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import MCPToolset
-    from mcp.client.stdio import StdioServerParameters
+    from google.adk.runners import InMemoryRunner
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from mcp import StdioServerParameters
 
     ADK_AVAILABLE = True
 except ImportError:
@@ -38,16 +40,22 @@ async def create_location_agent() -> Agent | None:
         print("Error: GOOGLE_MAPS_API_KEY not set")
         return None
 
-    # Connect to Google Maps MCP server
-    print("Connecting to Google Maps MCP server...")
-    maps_tools = await MCPToolset.from_server(
-        connection_params=StdioServerParameters(
-            command="google-maps-mcp-server", env={"GOOGLE_MAPS_API_KEY": api_key}
+    # Get Gemini API key from environment (required for the agent model)
+    if not (os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")):
+        print("Error: GOOGLE_API_KEY or GEMINI_API_KEY not set")
+        print("This is required for the agent model (gemini-2.0-flash)")
+        print("Please set it in your .env file or environment variables")
+        return None
+
+    # Create Google Maps MCP toolset
+    print("Creating Google Maps MCP toolset...")
+    maps_tools = McpToolset(
+        connection_params=StdioConnectionParams(
+            server_params=StdioServerParameters(
+                command="google-maps-mcp-server", env={"GOOGLE_MAPS_API_KEY": api_key}
+            )
         )
     )
-
-    print(f"Connected! Available tools: {len(maps_tools.tools)}")
-    print()
 
     # Create ADK agent with Maps tools
     agent = Agent(
@@ -78,7 +86,7 @@ async def create_location_agent() -> Agent | None:
     return agent
 
 
-async def run_example_queries(agent: Any) -> None:
+async def run_example_queries(runner: Any) -> None:
     """Run example queries through the agent."""
 
     queries: list[dict[str, str]] = [
@@ -120,16 +128,25 @@ async def run_example_queries(agent: Any) -> None:
         print("-" * 80)
 
         # Run query through agent
-        response = await agent.run(example["query"])
+        events = await runner.run_debug(
+            example["query"], quiet=True, session_id=f"example_query_{i}"
+        )
 
         # Print response
-        print(f"Agent: {response}")
+        print("Agent: ", end="", flush=True)
+        for event in events:
+            if event.author == "location_intelligence_agent" and event.is_final_response():
+                if event.content and event.content.parts:
+                    for part in event.content.parts:
+                        if part.text:
+                            print(part.text, end="")
+        print()
         print()
         print("=" * 80)
         print()
 
 
-async def interactive_mode(agent: Any) -> None:
+async def interactive_mode(runner: Any) -> None:
     """Run agent in interactive mode."""
 
     print("=" * 80)
@@ -155,8 +172,16 @@ async def interactive_mode(agent: Any) -> None:
             # Get agent response
             print()
             print("Agent: ", end="", flush=True)
-            response = await agent.run(user_input)
-            print(response)
+            events = await runner.run_debug(
+                user_input, quiet=True, session_id="interactive_session"
+            )
+            for event in events:
+                if event.author == "location_intelligence_agent" and event.is_final_response():
+                    if event.content and event.content.parts:
+                        for part in event.content.parts:
+                            if part.text:
+                                print(part.text, end="")
+            print()
             print()
 
         except KeyboardInterrupt:
@@ -169,7 +194,7 @@ async def interactive_mode(agent: Any) -> None:
 
 async def main() -> None:
     """Main function."""
-    load_dotenv()
+    load_dotenv(find_dotenv())
 
     # Create agent
     agent = await create_location_agent()
@@ -177,18 +202,21 @@ async def main() -> None:
     if not agent:
         return
 
+    # Create runner
+    runner = InMemoryRunner(agent=agent)
+
     print("Agent created successfully!")
     print()
 
     # Run example queries
     print("Running example queries...")
     print()
-    await run_example_queries(agent)
+    await run_example_queries(runner)
 
     # Start interactive mode
     print("Starting interactive mode...")
     print()
-    await interactive_mode(agent)
+    await interactive_mode(runner)
 
 
 if __name__ == "__main__":
