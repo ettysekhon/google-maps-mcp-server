@@ -1,6 +1,6 @@
 """Unit tests for Places tool."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -43,30 +43,36 @@ async def test_places_tool_mcp_conversion() -> None:
 
 @pytest.mark.asyncio
 async def test_places_execute_mock(mock_settings: Settings, mock_gmaps_client: MagicMock) -> None:
-    """Test places execution with mocked client."""
+    """Test places execution with mocked new Places API client."""
     tool = PlacesTool(mock_settings)
 
-    # Mock response
-    mock_gmaps_client.places_nearby.return_value = {
-        "results": [
-            {
-                "name": "Test Restaurant",
-                "vicinity": "123 Main St",
-                "geometry": {"location": {"lat": 40.7128, "lng": -74.0060}},
-                "rating": 4.5,
-                "types": ["restaurant"],
-                "place_id": "test_place_id",
-            }
-        ]
-    }
+    # Mock the new Places API client and response
+    mock_place = MagicMock()
+    mock_place.display_name.text = "Test Restaurant"
+    mock_place.formatted_address = "123 Main St"
+    mock_place.location.latitude = 40.7128
+    mock_place.location.longitude = -74.0060
+    mock_place.rating = 4.5
+    mock_place.types = ["restaurant"]
+    mock_place.id = "test_place_id"
 
-    result = await tool.execute(
-        {
-            "location": "40.7128,-74.0060",
-            "keyword": "restaurant",
-        }
-    )
+    mock_response = MagicMock()
+    mock_response.places = [mock_place]
+
+    with patch("google_maps_mcp_server.tools.places.places_v1.PlacesClient") as mock_client_class:
+        mock_client = MagicMock()
+        mock_client.search_nearby.return_value = mock_response
+        mock_client_class.return_value = mock_client
+
+        result = await tool.execute(
+            {
+                "location": "40.7128,-74.0060",
+                "keyword": "restaurant",
+            }
+        )
 
     assert result["status"] == "success"
     assert "data" in result
     assert "places" in result["data"]
+    assert len(result["data"]["places"]) == 1
+    assert result["data"]["places"][0]["name"] == "Test Restaurant"

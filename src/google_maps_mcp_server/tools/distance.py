@@ -2,6 +2,7 @@
 
 from typing import Any
 
+import googlemaps
 import structlog
 
 from .base import BaseTool
@@ -119,6 +120,11 @@ class DistanceMatrixTool(BaseTool):
                 {"matrix": matrix, "origins": len(origins), "destinations": len(destinations)}
             )
 
+        except googlemaps.exceptions.ApiError as e:
+            # Handle API errors gracefully
+            error_msg = str(e)
+            logger.error("distance_matrix_failed", error=error_msg)
+            return self._format_response(None, status="error", error=error_msg)
         except Exception as e:
-            logger.exception("distance_matrix_failed", error=str(e))
+            logger.error("distance_matrix_failed", error=str(e))
             return self._format_response(None, status="error", error=str(e))

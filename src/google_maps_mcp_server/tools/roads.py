@@ -2,6 +2,7 @@
 
 from typing import Any
 
+import googlemaps
 import structlog
 
 from .base import BaseTool
@@ -82,8 +83,13 @@ class SnapToRoadsTool(BaseTool):
                 {"snapped_points": snapped_points, "count": len(snapped_points)}
             )
 
+        except googlemaps.exceptions.ApiError as e:
+            # Handle API errors gracefully
+            error_msg = str(e)
+            logger.error("snap_to_roads_failed", error=error_msg)
+            return self._format_response(None, status="error", error=error_msg)
         except Exception as e:
-            logger.exception("snap_to_roads_failed", error=str(e))
+            logger.error("snap_to_roads_failed", error=str(e))
             return self._format_response(None, status="error", error=str(e))
 
 
@@ -113,12 +119,6 @@ class SpeedLimitsTool(BaseTool):
                     "minItems": 1,
                     "maxItems": 100,
                 },
-                "units": {
-                    "type": "string",
-                    "enum": ["KPH", "MPH"],
-                    "default": "KPH",
-                    "description": "Speed limit units",
-                },
             },
             "required": ["place_ids"],
         }
@@ -127,13 +127,11 @@ class SpeedLimitsTool(BaseTool):
         """Execute speed limits request."""
         try:
             place_ids = arguments["place_ids"]
-            units = arguments.get("units", "KPH")
+            # Note: units parameter is not supported by the API, units are returned in the response
 
             logger.info("getting_speed_limits", num_places=len(place_ids))
 
-            result = await self._execute_with_retry(
-                self.gmaps.speed_limits, place_ids=place_ids, units=units
-            )
+            result = await self._execute_with_retry(self.gmaps.speed_limits, place_ids=place_ids)
 
             # Format results
             speed_limits = []
@@ -149,6 +147,11 @@ class SpeedLimitsTool(BaseTool):
             logger.info("speed_limits_retrieved", count=len(speed_limits))
             return self._format_response({"speed_limits": speed_limits, "count": len(speed_limits)})
 
+        except googlemaps.exceptions.ApiError as e:
+            # Handle API errors gracefully (e.g., PERMISSION_DENIED for premium features)
+            error_msg = str(e)
+            logger.error("speed_limits_failed", error=error_msg)
+            return self._format_response(None, status="error", error=error_msg)
         except Exception as e:
-            logger.exception("speed_limits_failed", error=str(e))
+            logger.error("speed_limits_failed", error=str(e))
             return self._format_response(None, status="error", error=str(e))

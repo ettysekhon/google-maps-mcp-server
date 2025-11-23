@@ -3,6 +3,7 @@
 from datetime import datetime
 from typing import Any
 
+import googlemaps
 import structlog
 
 from .base import BaseTool
@@ -144,6 +145,11 @@ class DirectionsTool(BaseTool):
             logger.info("directions_found", num_routes=len(routes))
             return self._format_response({"routes": routes, "count": len(routes)})
 
+        except googlemaps.exceptions.ApiError as e:
+            # Handle API errors gracefully
+            error_msg = str(e)
+            logger.error("directions_failed", error=error_msg)
+            return self._format_response(None, status="error", error=error_msg)
         except Exception as e:
-            logger.exception("directions_failed", error=str(e))
+            logger.error("directions_failed", error=str(e))
             return self._format_response(None, status="error", error=str(e))

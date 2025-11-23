@@ -2,6 +2,7 @@
 
 from typing import Any
 
+import googlemaps
 import structlog
 
 from .base import BaseTool
@@ -72,8 +73,13 @@ class GeocodingTool(BaseTool):
             logger.info("geocoding_success", formatted_address=location["formatted_address"])
             return self._format_response(formatted_result)
 
+        except googlemaps.exceptions.ApiError as e:
+            # Handle API errors gracefully
+            error_msg = str(e)
+            logger.error("geocoding_failed", error=error_msg)
+            return self._format_response(None, status="error", error=error_msg)
         except Exception as e:
-            logger.exception("geocoding_failed", error=str(e))
+            logger.error("geocoding_failed", error=str(e))
             return self._format_response(None, status="error", error=str(e))
 
 
@@ -144,6 +150,11 @@ class ReverseGeocodingTool(BaseTool):
             logger.info("reverse_geocoding_success", address=location["formatted_address"])
             return self._format_response(formatted_result)
 
+        except googlemaps.exceptions.ApiError as e:
+            # Handle API errors gracefully
+            error_msg = str(e)
+            logger.error("reverse_geocoding_failed", error=error_msg)
+            return self._format_response(None, status="error", error=error_msg)
         except Exception as e:
-            logger.exception("reverse_geocoding_failed", error=str(e))
+            logger.error("reverse_geocoding_failed", error=str(e))
             return self._format_response(None, status="error", error=str(e))

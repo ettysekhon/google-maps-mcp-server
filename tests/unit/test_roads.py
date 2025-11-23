@@ -51,11 +51,11 @@ async def test_speed_limits_schema() -> None:
 
 @pytest.mark.asyncio
 async def test_speed_limits_units() -> None:
-    """Test speed limits tool supports both unit systems."""
+    """Test speed limits tool schema (units are returned by API, not specified in request)."""
     settings = Settings(google_maps_api_key="AIzaSyDEMO_KEY_12345678901234567890123")
     tool = SpeedLimitsTool(settings)
     schema = tool.input_schema
 
-    units_enum = schema["properties"]["units"]["enum"]
-    assert "KPH" in units_enum
-    assert "MPH" in units_enum
+    # The new API doesn't accept units parameter - units are returned in the response
+    assert "place_ids" in schema["properties"]
+    assert "units" not in schema["properties"]

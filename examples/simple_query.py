@@ -52,6 +52,13 @@ async def main() -> None:
             print(f"    Address: {place['address']}")
             print(f"    Rating: {place.get('rating', 'N/A')}⭐")
             print()
+    else:
+        print(f"⚠️  Error: {places_result.get('error', 'Unknown error')}")
+        print("    Make sure Places API (New) is enabled in Google Cloud Console.")
+        print(
+            "    See: https://developers.google.com/maps/documentation/places/web-service/cloud-setup"
+        )
+        print()
     print()
 
     # Example 2: Get directions
@@ -155,11 +162,12 @@ async def main() -> None:
         print(f"Snapped {snap_result['data']['count']} points to roads")
         print("Original points → Snapped points:")
         for i, point in enumerate(snap_result["data"]["snapped_points"][:3]):
-            original = gps_trace[point.get("original_index", i)]
+            original_idx = point.get("original_index")
+            original = gps_trace[original_idx if original_idx is not None else i]
             snapped = point["location"]
             print(
                 f"  ({original['lat']:.6f}, {original['lng']:.6f}) → "
-                f"({snapped['lat']:.6f}, {snapped['lng']:.6f})"
+                f"({snapped['latitude']:.6f}, {snapped['longitude']:.6f})"
             )
         print()
     print()
@@ -170,20 +178,32 @@ async def main() -> None:
         print("-" * 80)
         speed_tool = SpeedLimitsTool(settings)
 
-        # Get place IDs from snapped points
-        place_ids = [p["place_id"] for p in snap_result["data"]["snapped_points"][:2]]
+        # Get place IDs from snapped points (filter out None values)
+        place_ids = [
+            p["place_id"] for p in snap_result["data"]["snapped_points"][:2] if p.get("place_id")
+        ]
 
-        speed_result = await speed_tool.execute(
-            {
-                "place_ids": place_ids,
-                "units": "MPH",
-            }
-        )
+        if place_ids:
+            speed_result = await speed_tool.execute(
+                {
+                    "place_ids": place_ids,
+                }
+            )
 
-        if speed_result["status"] == "success":
-            print(f"Found speed limits for {speed_result['data']['count']} segments:")
-            for limit in speed_result["data"]["speed_limits"]:
-                print(f"  Speed limit: {limit['speed_limit']} {limit['units']}")
+            if speed_result["status"] == "success":
+                print(f"Found speed limits for {speed_result['data']['count']} segments:")
+                for limit in speed_result["data"]["speed_limits"]:
+                    print(f"  Speed limit: {limit['speed_limit']} {limit['units']}")
+                print()
+            elif "PERMISSION_DENIED" in speed_result.get("error", ""):
+                print("⚠️  Note: Speed limits API requires additional permissions.")
+                print("    Enable Roads API premium features in Google Cloud Console.")
+                print()
+            else:
+                print(f"  Error: {speed_result.get('error', 'Unknown error')}")
+                print()
+        else:
+            print("  No place IDs available for speed limit lookup")
             print()
 
     print("=" * 80)

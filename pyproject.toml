@@ -36,6 +36,7 @@ dependencies = [
     "structlog>=25.5.0",
     "httpx>=0.28.1",
     "google-adk>=1.19.0",
+    "google-maps-places>=0.5.0",
 ]
 
 [project.optional-dependencies]
@@ -110,7 +111,7 @@ warn_unused_configs = true
 disallow_untyped_defs = true
 
 [[tool.mypy.overrides]]
-module = ["googlemaps", "googlemaps.*"]
+module = ["googlemaps", "googlemaps.*", "google.type", "google.type.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
