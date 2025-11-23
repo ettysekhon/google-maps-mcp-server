@@ -1,5 +1,6 @@
 """Unit tests for Geocoding tools."""
 
+import googlemaps
 import pytest
 
 from google_maps_mcp_server.config import Settings
@@ -43,3 +44,33 @@ async def test_reverse_geocoding_schema_validation() -> None:
     assert "lat" in schema["properties"]
     assert "lng" in schema["properties"]
     assert set(schema["required"]) == {"lat", "lng"}
+
+
+@pytest.mark.asyncio
+async def test_geocoding_handles_api_error(
+    mock_settings: Settings, mock_gmaps_client: googlemaps.Client
+) -> None:
+    """GeocodingTool correctly handles googlemaps.exceptions.ApiError."""
+    tool = GeocodingTool(mock_settings)
+
+    mock_gmaps_client.geocode.side_effect = googlemaps.exceptions.ApiError("ZERO_RESULTS")
+
+    result = await tool.execute({"address": "Some address"})
+
+    assert result["status"] == "error"
+    assert "ZERO_RESULTS" in result.get("error", "")
+
+
+@pytest.mark.asyncio
+async def test_reverse_geocoding_handles_api_error(
+    mock_settings: Settings, mock_gmaps_client: googlemaps.Client
+) -> None:
+    """ReverseGeocodingTool correctly handles googlemaps.exceptions.ApiError."""
+    tool = ReverseGeocodingTool(mock_settings)
+
+    mock_gmaps_client.reverse_geocode.side_effect = googlemaps.exceptions.ApiError("REQUEST_DENIED")
+
+    result = await tool.execute({"lat": 1.0, "lng": 2.0})
+
+    assert result["status"] == "error"
+    assert "REQUEST_DENIED" in result.get("error", "")

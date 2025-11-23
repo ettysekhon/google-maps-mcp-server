@@ -1,5 +1,6 @@
 """Unit tests for Directions tool."""
 
+import googlemaps
 import pytest
 
 from google_maps_mcp_server.config import Settings
@@ -60,3 +61,23 @@ async def test_directions_mcp_conversion() -> None:
     assert mcp_tool.name == "get_directions"
     assert mcp_tool.description is not None
     assert mcp_tool.inputSchema is not None
+
+
+@pytest.mark.asyncio
+async def test_directions_handles_api_error(
+    mock_settings: Settings, mock_gmaps_client: googlemaps.Client
+) -> None:
+    """DirectionsTool correctly handles googlemaps.exceptions.ApiError."""
+    tool = DirectionsTool(mock_settings)
+
+    mock_gmaps_client.directions.side_effect = googlemaps.exceptions.ApiError("OVER_QUERY_LIMIT")
+
+    result = await tool.execute(
+        {
+            "origin": "A",
+            "destination": "B",
+        }
+    )
+
+    assert result["status"] == "error"
+    assert "OVER_QUERY_LIMIT" in result.get("error", "")

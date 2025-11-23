@@ -1,5 +1,6 @@
 """Unit tests for Distance Matrix tool."""
 
+import googlemaps
 import pytest
 
 from google_maps_mcp_server.config import Settings
@@ -39,3 +40,23 @@ async def test_distance_matrix_units() -> None:
     units_enum = schema["properties"]["units"]["enum"]
     assert "metric" in units_enum
     assert "imperial" in units_enum
+
+
+@pytest.mark.asyncio
+async def test_distance_matrix_handles_api_error(
+    mock_settings: Settings, mock_gmaps_client: googlemaps.Client
+) -> None:
+    """DistanceMatrixTool correctly handles googlemaps.exceptions.ApiError."""
+    tool = DistanceMatrixTool(mock_settings)
+
+    mock_gmaps_client.distance_matrix.side_effect = googlemaps.exceptions.ApiError("REQUEST_DENIED")
+
+    result = await tool.execute(
+        {
+            "origins": ["A"],
+            "destinations": ["B"],
+        }
+    )
+
+    assert result["status"] == "error"
+    assert "REQUEST_DENIED" in result.get("error", "")
