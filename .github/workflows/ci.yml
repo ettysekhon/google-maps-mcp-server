@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
   test:
@@ -14,60 +14,61 @@ jobs:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v5
-      with:
-        version: "0.9.11"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.9.11"
 
-    - name: Set up Python ${{ matrix.python-version }}
-      run: uv python install ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
 
-    - name: Install dependencies
-      run: |
-        uv sync --extra dev
+      - name: Install dependencies
+        run: |
+          uv sync --extra dev
 
-    - name: Run linting
-      run: |
-        uv run ruff check src tests
-        uv run black --check src tests
+      - name: Run linting
+        run: |
+          uv run ruff check src tests
+          uv run black --check src tests
 
-    - name: Run type checking
-      run: |
-        uv run mypy src
+      - name: Run type checking
+        run: |
+          uv run mypy src
 
-    - name: Run tests
-      env:
-        GOOGLE_MAPS_API_KEY: test_key_for_ci
-      run: |
-        uv run pytest -v --cov=src --cov-report=xml --cov-report=term -m "not integration"
+      - name: Run tests
+        env:
+          GOOGLE_MAPS_API_KEY: test_key_for_ci
+        run: |
+          uv run pytest -v --cov=src --cov-report=xml --cov-report=term -m "not integration"
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
+      - name: Upload coverage to Codecov
+        if: ${{ github.event_name == 'push' }}
+        uses: codecov/codecov-action@v5
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
 
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v5
-      with:
-        version: "0.9.11"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.9.11"
 
-    - name: Set up Python
-      run: uv python install 3.14
+      - name: Set up Python
+        run: uv python install 3.14
 
-    - name: Install dependencies
-      run: uv sync --extra dev
+      - name: Install dependencies
+        run: uv sync --extra dev
 
-    - name: Check formatting
-      run: uv run black --check src tests
+      - name: Check formatting
+        run: uv run black --check src tests
 
-    - name: Lint with ruff
-      run: uv run ruff check src tests
+      - name: Lint with ruff
+        run: uv run ruff check src tests
