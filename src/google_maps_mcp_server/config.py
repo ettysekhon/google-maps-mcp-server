@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     google_api_key: str = ""
 
     # Server configuration
-    version: str = "0.1.0"
+    version: str = "0.2.0"
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
     # API limits

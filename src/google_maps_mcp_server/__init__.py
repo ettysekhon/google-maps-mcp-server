@@ -3,5 +3,5 @@
 from .config import Settings
 from .server import GoogleMapsMCPServer, main
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __all__ = ["GoogleMapsMCPServer", "Settings", "main"]

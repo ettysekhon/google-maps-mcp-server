@@ -1,6 +1,6 @@
 [project]
 name = "google-maps-mcp-server"
-version = "0.1.0"
+version = "0.2.0"
 description = "Production-ready MCP server for Google Maps Platform APIs - Directions, Places, Geocoding, Roads, and Distance Matrix"
 readme = "README.md"
 requires-python = ">=3.10"
