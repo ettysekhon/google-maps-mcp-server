@@ -7,9 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0] - 2025-01-XX
+## [0.2.0] - 2025-11-29
 
-### Added
+### Added for version 0.2.0
+
+- `get_place_details` tool to retrieve comprehensive place information (opening hours, contact details, websites) using the new Places API.
+- `get_traffic_conditions` tool for real-time congestion analysis and delay estimates between locations.
+- `calculate_route_safety_factors` tool for assessing route safety based on traffic density, road types, speed limits, and time of day.
+- Granular unit tests for all new tools (`TrafficConditionsTool`, `RouteSafetyTool`, `PlaceDetailsTool`).
+- Integration tests covering the full suite of 10 tools.
+
+### Changed
+
+- Migrated Places API usage to the new Google Maps Places API (v1) for improved data access and field masking.
+- Enhanced error handling across all tools with clearer user-facing messages.
+- Optimised CI pipeline by separating Codecov uploads into a dedicated workflow for better security with protected branches.
+
+## [0.1.0] - 2025-01-23
+
+### Added for version 0.1.0
 
 - Initial release of Google Maps MCP Server
 - Support for Places API (nearby search)
@@ -31,5 +47,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Claude Desktop integration
 - Google ADK integration examples
 
-[Unreleased]: https://github.com/ettysekhon/google-maps-mcp-server/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/ettysekhon/google-maps-mcp-server/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/ettysekhon/google-maps-mcp-server/releases/tag/v0.2.0
 [0.1.0]: https://github.com/ettysekhon/google-maps-mcp-server/releases/tag/v0.1.0

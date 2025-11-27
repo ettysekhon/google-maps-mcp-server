@@ -164,6 +164,169 @@ class PlacesTool(BaseTool):
         return places
 
 
+class PlaceDetailsTool(BaseTool):
+    """Get detailed information about a place using Google Places API."""
+
+    @property
+    def name(self) -> str:
+        return "get_place_details"
+
+    @property
+    def description(self) -> str:
+        return (
+            "Get detailed information about a specific place using its Place ID. "
+            "Returns address, phone number, website, opening hours, and other details."
+        )
+
+    @property
+    def input_schema(self) -> dict[str, Any]:
+        return {
+            "type": "object",
+            "properties": {
+                "place_id": {
+                    "type": "string",
+                    "description": "The unique Place ID",
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Specific fields to retrieve (optional)",
+                },
+            },
+            "required": ["place_id"],
+        }
+
+    async def execute(self, arguments: dict[str, Any]) -> dict[str, Any]:
+        """Execute place details request."""
+        try:
+            place_id = arguments["place_id"]
+            fields = arguments.get("fields")
+
+            logger.info("getting_place_details", place_id=place_id, fields=fields)
+
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(
+                None,
+                lambda: self._get_place_details_new_api(place_id, fields),
+            )
+
+            logger.info("place_details_retrieved", place_id=place_id)
+            return self._format_response(result)
+
+        except googlemaps.exceptions.ApiError as e:
+            error_msg = str(e)
+            logger.error("place_details_failed", error=error_msg)
+            return self._format_response(None, status="error", error=error_msg)
+        except Exception as e:
+            logger.error("place_details_failed", error=str(e))
+            return self._format_response(None, status="error", error=str(e))
+
+    def _get_place_details_new_api(
+        self, place_id: str, fields: list[str] | None = None
+    ) -> dict[str, Any]:
+        """Get place details using the new Places API."""
+        opts = client_options.ClientOptions(api_key=self.settings.google_maps_api_key)
+        client = places_v1.PlacesClient(client_options=opts)
+
+        request = places_v1.GetPlaceRequest(name=f"places/{place_id}")
+
+        # Default fields if not specified
+        if not fields:
+            fields = [
+                "displayName",
+                "formattedAddress",
+                "location",
+                "rating",
+                "types",
+                "id",
+                "nationalPhoneNumber",
+                "websiteUri",
+                "regularOpeningHours",
+                "priceLevel",
+                "userRatingCount",
+            ]
+
+        # Map simple field names to API field mask paths
+        field_mapping = {
+            "name": "displayName",
+            "address": "formattedAddress",
+            "location": "location",
+            "rating": "rating",
+            "types": "types",
+            "id": "id",
+            "phone": "nationalPhoneNumber",
+            "website": "websiteUri",
+            "hours": "regularOpeningHours",
+            "price": "priceLevel",
+            "reviews": "userRatingCount",
+        }
+
+        # Construct field mask
+        mask_parts = []
+        for f in fields:
+            # Handle both mapped and direct field names
+            api_field = field_mapping.get(f, f)
+            # Ensure 'places.' prefix if not present (though request usually needs just the field name,
+            # checking docs: for GetPlace, the field mask should be paths relative to the resource, e.g. 'id', 'displayName')
+            # Actually, for GetPlace, the fieldmask is passed in the 'read_mask' parameter or header?
+            # In the python client `get_place` method takes `metadata=[('x-goog-fieldmask', mask)]`?
+            # Let's check `get_place` signature. It takes `request`.
+            # The `search_nearby` example used metadata. `get_place` should be similar.
+            mask_parts.append(api_field)
+
+        # If user didn't provide valid fields, fallback to defaults
+        if not mask_parts:
+            mask_parts = list(field_mapping.values())
+
+        field_mask = ",".join(mask_parts)
+
+        response = client.get_place(request=request, metadata=[("x-goog-fieldmask", field_mask)])
+
+        # Format response
+        place_data = {
+            "name": response.display_name.text if response.display_name else None,
+            "address": response.formatted_address if response.formatted_address else None,
+            "location": {
+                "lat": response.location.latitude if response.location else None,
+                "lng": response.location.longitude if response.location else None,
+            },
+            "rating": response.rating if hasattr(response, "rating") else None,
+            "types": list(response.types) if response.types else [],
+            "place_id": response.id if response.id else None,
+            "phone_number": (
+                response.national_phone_number if response.national_phone_number else None
+            ),
+            "website": response.website_uri if response.website_uri else None,
+            "price_level": response.price_level if response.price_level else None,
+            "user_ratings_total": (
+                response.user_rating_count if response.user_rating_count else None
+            ),
+        }
+
+        if response.regular_opening_hours:
+            place_data["opening_hours"] = {
+                "open_now": response.regular_opening_hours.open_now,
+                "periods": [
+                    {
+                        "open": {"day": p.open.day, "hour": p.open.hour, "minute": p.open.minute},
+                        "close": (
+                            {
+                                "day": p.close.day,
+                                "hour": p.close.hour,
+                                "minute": p.close.minute,
+                            }
+                            if p.close
+                            else None
+                        ),
+                    }
+                    for p in response.regular_opening_hours.periods
+                ],
+                "weekday_text": list(response.regular_opening_hours.weekday_descriptions),
+            }
+
+        return place_data
+
+
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 async def search_nearby(gmaps: googlemaps.Client, params: dict[str, Any]) -> dict[str, Any]:
     """Search for nearby places with retry logic"""

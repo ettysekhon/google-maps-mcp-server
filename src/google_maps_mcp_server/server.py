@@ -18,10 +18,13 @@ from .tools import (
     DirectionsTool,
     DistanceMatrixTool,
     GeocodingTool,
+    PlaceDetailsTool,
     PlacesTool,
     ReverseGeocodingTool,
+    RouteSafetyTool,
     SnapToRoadsTool,
     SpeedLimitsTool,
+    TrafficConditionsTool,
 )
 
 logger = structlog.get_logger()
@@ -46,12 +49,15 @@ class GoogleMapsMCPServer:
         # Initialize tools
         self.tools = [
             PlacesTool(self.settings),
+            PlaceDetailsTool(self.settings),
             DirectionsTool(self.settings),
             GeocodingTool(self.settings),
             ReverseGeocodingTool(self.settings),
             DistanceMatrixTool(self.settings),
             SnapToRoadsTool(self.settings),
             SpeedLimitsTool(self.settings),
+            TrafficConditionsTool(self.settings),
+            RouteSafetyTool(self.settings),
         ]
 
         self._register_handlers()
