@@ -15,17 +15,20 @@ Complete reference for all Google Maps MCP Server tools.
 
 ## Tools Overview
 
-The Google Maps MCP Server provides 7 tools across 5 Google Maps Platform APIs:
+The Google Maps MCP Server provides 10 tools across 5 Google Maps Platform APIs:
 
 | Tool Name | API | Purpose |
 |-----------|-----|---------|
 | `search_places` | Places API | Find POIs near a location |
+| `get_place_details` | Places API | Get comprehensive details for a place |
 | `get_directions` | Directions API | Get routes with traffic |
+| `get_traffic_conditions` | Directions API | Analyse real-time traffic congestion |
 | `geocode_address` | Geocoding API | Address → Coordinates |
 | `reverse_geocode` | Geocoding API | Coordinates → Address |
 | `calculate_distance_matrix` | Distance Matrix API | Multi-point distances |
 | `snap_to_roads` | Roads API | Clean GPS data |
 | `get_speed_limits` | Roads API | Speed limit retrieval |
+| `calculate_route_safety_factors` | Compound | Assess route safety risks |
 
 ---
 
@@ -35,7 +38,7 @@ The Google Maps MCP Server provides 7 tools across 5 Google Maps Platform APIs:
 
 Search for places near a specific location.
 
-#### Parameters
+#### Parameters (search_places)
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -58,18 +61,18 @@ Common place types:
 
 [Full list of place types](https://developers.google.com/maps/documentation/places/web-service/supported_types)
 
-#### Request Example
+#### Request Example (search_places)
 
 ```json
 {
-  "location": "40.7580,-73.9855",
+  "location": "51.5118,-0.1175",
   "keyword": "pizza",
   "radius": 1000,
   "type": "restaurant"
 }
 ```
 
-#### Response Example
+#### Response Example (search_places)
 
 ```json
 {
@@ -78,11 +81,11 @@ Common place types:
   "data": {
     "places": [
       {
-        "name": "Joe's Pizza",
-        "address": "1435 Broadway, New York",
+        "name": "Pizza Express",
+        "address": "The Strand, London",
         "location": {
-          "lat": 40.75829,
-          "lng": -73.98561
+          "lat": 51.5120,
+          "lng": -0.1180
         },
         "rating": 4.3,
         "user_ratings_total": 1234,
@@ -97,6 +100,44 @@ Common place types:
 }
 ```
 
+### get_place_details
+
+Get comprehensive details for a place.
+
+#### Parameters (get_place_details)
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `place_id` | string | Yes | The unique Place ID |
+| `fields` | array | No | Specific fields to retrieve (e.g., ["name", "phone", "hours"]) |
+
+#### Request Example (get_place_details)
+
+```json
+{
+  "place_id": "ChIJN1t_tDeuEmsRUsoyG83frY4",
+  "fields": ["name", "website", "hours"]
+}
+```
+
+#### Response Example (get_place_details)
+
+```json
+{
+  "status": "success",
+  "tool": "get_place_details",
+  "data": {
+    "name": "The Ritz London",
+    "website": "https://www.theritzlondon.com",
+    "opening_hours": {
+      "open_now": true,
+      "periods": [...],
+      "weekday_text": ["Monday: Open 24 hours", ...]
+    }
+  }
+}
+```
+
 ---
 
 ## Directions API
@@ -105,7 +146,7 @@ Common place types:
 
 Get route directions between two locations with real-time traffic.
 
-#### Parameters
+#### Parameters (get_directions)
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -137,12 +178,12 @@ Get route directions between two locations with real-time traffic.
 - `optimistic` - Optimistic traffic assumptions
 - `pessimistic` - Pessimistic traffic assumptions
 
-#### Request Example
+#### Request Example (get_directions)
 
 ```json
 {
-  "origin": "San Francisco, CA",
-  "destination": "Los Angeles, CA",
+  "origin": "London, UK",
+  "destination": "Manchester, UK",
   "mode": "driving",
   "departure_time": "2025-01-15T09:00:00Z",
   "alternatives": true,
@@ -151,7 +192,7 @@ Get route directions between two locations with real-time traffic.
 }
 ```
 
-#### Response Example
+#### Response Example (get_directions)
 
 ```json
 {
@@ -160,19 +201,19 @@ Get route directions between two locations with real-time traffic.
   "data": {
     "routes": [
       {
-        "summary": "I-5 S",
-        "distance": "616 km",
-        "distance_meters": 616000,
-        "duration": "5 hours 48 mins",
-        "duration_seconds": 20880,
-        "duration_in_traffic": "6 hours 15 mins",
-        "start_address": "San Francisco, CA, USA",
-        "end_address": "Los Angeles, CA, USA",
-        "start_location": {"lat": 37.7749, "lng": -122.4194},
-        "end_location": {"lat": 34.0522, "lng": -118.2437},
+        "summary": "M4",
+        "distance": "320 km",
+        "distance_meters": 320000,
+        "duration": "3 hours 48 mins",
+        "duration_seconds": 13680,
+        "duration_in_traffic": "4 hours 15 mins",
+        "start_address": "London, UK",
+        "end_address": "Manchester, UK",
+        "start_location": {"lat": 51.5074, "lng": -0.1278},
+        "end_location": {"lat": 53.4808, "lng": -2.2426},
         "steps": [
           {
-            "instruction": "Head south on Van Ness Ave toward Oak St",
+            "instruction": "Head north on M1",
             "distance": "0.2 km",
             "duration": "1 min"
           }
@@ -185,6 +226,46 @@ Get route directions between two locations with real-time traffic.
 }
 ```
 
+### get_traffic_conditions
+
+Analyze real-time traffic conditions between two locations.
+
+#### Parameters (get_traffic_conditions)
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `origin` | string | Yes | Starting location |
+| `destination` | string | Yes | Ending location |
+| `departure_time` | string | No | ISO 8601 timestamp (defaults to now) |
+
+#### Request Example (get_traffic_conditions)
+
+```json
+{
+  "origin": "London, UK",
+  "destination": "Oxford, UK"
+}
+```
+
+#### Response Example (get_traffic_conditions)
+
+```json
+{
+  "status": "success",
+  "tool": "get_traffic_conditions",
+  "data": {
+    "route_summary": "M40",
+    "normal_duration": "1 hour 10 mins",
+    "traffic_duration": "1 hour 35 mins",
+    "delay_minutes": 25.0,
+    "congestion_level": "Moderate",
+    "distance": "90 km",
+    "start_address": "London, UK",
+    "end_address": "Oxford, UK"
+  }
+}
+```
+
 ---
 
 ## Geocoding API
@@ -193,7 +274,7 @@ Get route directions between two locations with real-time traffic.
 
 Convert a street address to geographic coordinates.
 
-#### Parameters
+#### Parameters (geocode_address)
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -207,44 +288,44 @@ Filter results by:
 
 ```json
 {
-  "country": "US",
-  "postal_code": "94043",
-  "locality": "Mountain View"
+  "country": "GB",
+  "postal_code": "SW1A 2AA",
+  "locality": "London"
 }
 ```
 
-#### Request Example
+#### Request Example (geocode_address)
 
 ```json
 {
-  "address": "1600 Amphitheatre Parkway, Mountain View, CA",
-  "region": "US"
+  "address": "10 Downing Street, London, UK",
+  "region": "GB"
 }
 ```
 
-#### Response Example
+#### Response Example (geocode_address)
 
 ```json
 {
   "status": "success",
   "tool": "geocode_address",
   "data": {
-    "formatted_address": "1600 Amphitheatre Pkwy, Mountain View, CA 94043, USA",
+    "formatted_address": "10 Downing St, London SW1A 2AA, UK",
     "location": {
-      "lat": 37.4224764,
-      "lng": -122.0842499
+      "lat": 51.5034,
+      "lng": -0.1276
     },
     "place_id": "ChIJ2eUgeAK6j4ARbn5u_wAGqWA",
     "types": ["street_address"],
     "address_components": [
       {
-        "long_name": "1600",
-        "short_name": "1600",
+        "long_name": "10",
+        "short_name": "10",
         "types": ["street_number"]
       },
       {
-        "long_name": "Amphitheatre Parkway",
-        "short_name": "Amphitheatre Pkwy",
+        "long_name": "Downing Street",
+        "short_name": "Downing St",
         "types": ["route"]
       }
     ]
@@ -256,7 +337,7 @@ Filter results by:
 
 Convert geographic coordinates to a street address.
 
-#### Parameters
+#### Parameters (reverse_geocode)
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -274,24 +355,24 @@ Filter by types such as:
 - `postal_code` - Postal code
 - `country` - Country
 
-#### Request Example
+#### Request Example (reverse_geocode)
 
 ```json
 {
-  "lat": 40.714224,
-  "lng": -73.961452,
+  "lat": 51.5034,
+  "lng": -0.1276,
   "result_type": ["street_address"]
 }
 ```
 
-#### Response Example
+#### Response Example (reverse_geocode)
 
 ```json
 {
   "status": "success",
   "tool": "reverse_geocode",
   "data": {
-    "formatted_address": "277 Bedford Ave, Brooklyn, NY 11211, USA",
+    "formatted_address": "10 Downing St, London SW1A 2AA, UK",
     "place_id": "ChIJd8BlQ2BZwokRAFUEcm_qrcA",
     "types": ["street_address"],
     "address_components": [...]
@@ -307,7 +388,7 @@ Filter by types such as:
 
 Calculate travel distances and times between multiple origins and destinations.
 
-#### Parameters
+#### Parameters (calculate_distance_matrix)
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -317,24 +398,18 @@ Calculate travel distances and times between multiple origins and destinations.
 | `avoid` | array | No | Features to avoid |
 | `units` | string | No | "metric" or "imperial" |
 
-#### Request Example
+#### Request Example (calculate_distance_matrix)
 
 ```json
 {
-  "origins": [
-    "New York, NY",
-    "Boston, MA"
-  ],
-  "destinations": [
-    "Philadelphia, PA",
-    "Washington, DC"
-  ],
+  "origins": ["London, UK", "Manchester, UK"],
+  "destinations": ["Birmingham, UK", "Leeds, UK"],
   "mode": "driving",
   "units": "metric"
 }
 ```
 
-#### Response Example
+#### Response Example (calculate_distance_matrix)
 
 ```json
 {
@@ -344,21 +419,21 @@ Calculate travel distances and times between multiple origins and destinations.
     "matrix": [
       [
         {
-          "origin": "New York, NY, USA",
-          "destination": "Philadelphia, PA, USA",
-          "distance": "152 km",
-          "distance_meters": 152000,
-          "duration": "1 hour 47 mins",
-          "duration_seconds": 6420,
+          "origin": "London, UK",
+          "destination": "Birmingham, UK",
+          "distance": "190 km",
+          "distance_meters": 190000,
+          "duration": "2 hours 15 mins",
+          "duration_seconds": 8100,
           "status": "OK"
         },
         {
-          "origin": "New York, NY, USA",
-          "destination": "Washington, DC, USA",
-          "distance": "362 km",
-          "distance_meters": 362000,
-          "duration": "3 hours 52 mins",
-          "duration_seconds": 13920,
+          "origin": "London, UK",
+          "destination": "Leeds, UK",
+          "distance": "310 km",
+          "distance_meters": 310000,
+          "duration": "3 hours 30 mins",
+          "duration_seconds": 12600,
           "status": "OK"
         }
       ]
@@ -377,7 +452,7 @@ Calculate travel distances and times between multiple origins and destinations.
 
 Snap GPS coordinates to the nearest road on the road network.
 
-#### Parameters
+#### Parameters (snap_to_roads)
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -390,25 +465,25 @@ Each point in the path must have:
 
 ```json
 {
-  "lat": 40.714224,
-  "lng": -73.961452
+  "lat": 51.5034,
+  "lng": -0.1276
 }
 ```
 
-#### Request Example
+#### Request Example (snap_to_roads)
 
 ```json
 {
   "path": [
-    {"lat": 40.714224, "lng": -73.961452},
-    {"lat": 40.714624, "lng": -73.961852},
-    {"lat": 40.715024, "lng": -73.962252}
+    {"lat": 51.5034, "lng": -0.1276},
+    {"lat": 51.5035, "lng": -0.1275},
+    {"lat": 51.5036, "lng": -0.1274}
   ],
   "interpolate": true
 }
 ```
 
-#### Response Example
+#### Response Example (snap_to_roads)
 
 ```json
 {
@@ -417,12 +492,12 @@ Each point in the path must have:
   "data": {
     "snapped_points": [
       {
-        "location": {"lat": 40.714227, "lng": -73.961450},
+        "location": {"lat": 51.5034, "lng": -0.1276},
         "original_index": 0,
         "place_id": "ChIJNwVFswe2woARUXfAcXJHxwU"
       },
       {
-        "location": {"lat": 40.714623, "lng": -73.961848},
+        "location": {"lat": 51.5035, "lng": -0.1275},
         "original_index": 1,
         "place_id": "ChIJNwVFswe2woARUXfAcXJHxwU"
       }
@@ -436,24 +511,24 @@ Each point in the path must have:
 
 Get speed limit information for road segments.
 
-#### Parameters
+#### Parameters (get_speed_limits)
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `place_ids` | array | Yes | Place IDs from snap_to_roads |
 
-#### Request Example
+#### Request Example (get_speed_limits)
 
 ```json
 {
   "place_ids": [
     "ChIJNwVFswe2woARUXfAcXJHxwU",
-    "ChIJQVrGw wm2woARU_VBoPPVnKM"
+    "ChIJQVrGwwm2woARU_VBoPPVnKM"
   ]
 }
 ```
 
-#### Response Example
+#### Response Example (get_speed_limits)
 
 ```json
 {
@@ -463,16 +538,62 @@ Get speed limit information for road segments.
     "speed_limits": [
       {
         "place_id": "ChIJNwVFswe2woARUXfAcXJHxwU",
-        "speed_limit": 25,
+        "speed_limit": 30,
         "units": "MPH"
       },
       {
         "place_id": "ChIJQVrGwwm2woARU_VBoPPVnKM",
-        "speed_limit": 35,
+        "speed_limit": 40,
         "units": "MPH"
       }
     ],
     "count": 2
+  }
+}
+```
+
+### calculate_route_safety_factors
+
+Assess route safety risks.
+
+#### Parameters (calculate_route_safety_factors)
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `origin` | string | Yes | Starting location |
+| `destination` | string | Yes | Ending location |
+| `departure_time` | string | No | ISO 8601 timestamp (defaults to now) |
+
+#### Request Example (calculate_route_safety_factors)
+
+```json
+{
+  "origin": "London, UK",
+  "destination": "Oxford, UK",
+  "departure_time": "2023-10-27T23:00:00Z"
+}
+```
+
+#### Response Example (calculate_route_safety_factors)
+
+```json
+{
+  "status": "success",
+  "tool": "calculate_route_safety_factors",
+  "data": {
+    "safety_score": 78.5,
+    "risk_level": "Moderate",
+    "details": {
+      "traffic_risk": "Moderate",
+      "road_risk": "Low Speed",
+      "time_risk": "Night",
+      "max_speed_limit_kmh": 112
+    },
+    "risk_factors": [
+      "Traffic: Moderate congestion",
+      "Conditions: Night driving"
+    ],
+    "route_summary": "M40"
   }
 }
 ```

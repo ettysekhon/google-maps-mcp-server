@@ -18,7 +18,7 @@ Empower your AI agents with real-world location intelligence: directions, places
 
 - **Production-Ready**: Robust error handling, automatic retries with exponential backoff, structured logging
 - **Universal Integration**: Works with Claude Desktop, Google ADK, and any MCP-compatible client
-- **Comprehensive API Coverage**: 7 tools spanning all major Google Maps APIs
+- **Comprehensive API Coverage**: 10 tools spanning all major Google Maps APIs
 - **Type-Safe**: Full type annotations with Pydantic validation and mypy compliance
 - **Zero Configuration**: Sensible defaults, works out of the box
 - **Thoroughly Tested**: >90% code coverage with unit and integration tests
@@ -33,12 +33,15 @@ Empower your AI agents with real-world location intelligence: directions, places
 | API | Tool | Description | Use Cases |
 |-----|------|-------------|-----------|
 | **Places API** | `search_places` | Find points of interest near a location | Restaurant recommendations, gas station finder, POI search |
+| **Places API** | `get_place_details` | Get comprehensive details for a place | Opening hours, websites, phone numbers, accessibility info |
 | **Directions API** | `get_directions` | Get routes with real-time traffic | Route planning, ETA calculation, alternative routes |
+| **Directions API** | `get_traffic_conditions` | Analyse real-time traffic congestion | Commute monitoring, delay estimation, fleet routing |
 | **Geocoding API** | `geocode_address` | Convert addresses to coordinates | Address validation, location lookup |
 | **Geocoding API** | `reverse_geocode` | Convert coordinates to addresses | Location identification, address lookup |
 | **Distance Matrix API** | `calculate_distance_matrix` | Multi-origin/destination distances | Fleet routing, delivery optimisation, travel planning |
 | **Roads API** | `snap_to_roads` | Snap GPS points to road network | GPS trace cleaning, route reconstruction |
 | **Roads API** | `get_speed_limits` | Retrieve speed limit data | Fleet safety monitoring, compliance checking |
+| **Compound** | `calculate_route_safety_factors` | Assess route safety risks | Fleet safety, insurance scoring, driver assistance |
 
 ---
 
@@ -161,11 +164,13 @@ Or if installed globally:
 
 Now you can ask Claude:
 
-- *"Find the best coffee shops near Times Square, New York"*
-- *"What's the fastest route from San Francisco to Los Angeles right now?"*
-- *"Convert the address '1600 Amphitheatre Parkway, Mountain View, CA' to coordinates"*
+- *"Find the best coffee shops near The Strand, London"*
+- *"What are the opening hours for the Natural History Museum?"*
+- *"How is the traffic from London to Manchester right now?"*
+- *"Is the route from Edinburgh to Glasgow safe for night driving?"*
+- *"Convert the address '10 Downing Street, London' to coordinates"*
 - *"What's the address for coordinates 51.5074, -0.1278?"*
-- *"Find gas stations within 2km of my current location at 40.7128,-74.0060"*
+- *"Find petrol stations within 2km of my current location at 51.5074,-0.1278"*
 
 ### With Google ADK
 
@@ -196,7 +201,7 @@ async def create_location_agent():
 
 # Use the agent
 agent = await create_location_agent()
-response = await agent.run("Find Italian restaurants near Central Park")
+response = await agent.run("Find Italian restaurants near Hyde Park, London")
 print(response)
 ```
 
@@ -234,7 +239,7 @@ async def find_nearby_restaurants():
     places_tool = PlacesTool(settings)
 
     result = await places_tool.execute({
-        "location": "40.7580,-73.9855",  # Times Square
+        "location": "51.5118,-0.1175",  # The Strand, London
         "keyword": "pizza",
         "radius": 1000
     })
@@ -291,7 +296,7 @@ Find places near a location.
 **Parameters:**
 
 - `location` (required): Coordinates as "lat,lng" or address string
-- `keyword` (required): Search keyword (e.g., "restaurant", "gas station")
+- `keyword` (required): Search keyword (e.g., "restaurant", "petrol station")
 - `radius` (optional): Search radius in meters (default: 5000, max: 50000)
 - `type` (optional): Place type filter (e.g., "restaurant", "gas_station")
 
@@ -299,10 +304,28 @@ Find places near a location.
 
 ```json
 {
-  "location": "40.7580,-73.9855",
+  "location": "51.5118,-0.1175",
   "keyword": "coffee shop",
   "radius": 1000,
   "type": "cafe"
+}
+```
+
+### `get_place_details`
+
+Get detailed information about a specific place.
+
+**Parameters:**
+
+- `place_id` (required): The unique Place ID
+- `fields` (optional): Specific fields to retrieve (e.g., ["name", "phone", "hours"])
+
+**Example:**
+
+```json
+{
+  "place_id": "ChIJN1t_tDeuEmsRUsoyG83frY4",
+  "fields": ["name", "website", "hours"]
 }
 ```
 
@@ -324,11 +347,30 @@ Get route directions with real-time traffic.
 
 ```json
 {
-  "origin": "San Francisco, CA",
-  "destination": "Los Angeles, CA",
+  "origin": "London, UK",
+  "destination": "Manchester, UK",
   "mode": "driving",
   "alternatives": true,
   "avoid": ["tolls"]
+}
+```
+
+### `get_traffic_conditions`
+
+Analyze real-time traffic conditions between two locations.
+
+**Parameters:**
+
+- `origin` (required): Starting location
+- `destination` (required): Ending location
+- `departure_time` (optional): ISO 8601 timestamp (defaults to now)
+
+**Example:**
+
+```json
+{
+  "origin": "London, UK",
+  "destination": "Oxford, UK"
 }
 ```
 
@@ -339,14 +381,14 @@ Convert an address to coordinates.
 **Parameters:**
 
 - `address` (required): Street address to geocode
-- `components` (optional): Component filters (e.g., {"country": "US"})
+- `components` (optional): Component filters (e.g., {"country": "GB"})
 - `region` (optional): Region bias (ISO 3166-1 country code)
 
 **Example:**
 
 ```json
 {
-  "address": "1600 Amphitheatre Parkway, Mountain View, CA"
+  "address": "10 Downing Street, London, UK"
 }
 ```
 
@@ -364,8 +406,8 @@ Convert coordinates to an address.
 
 ```json
 {
-  "lat": 40.714224,
-  "lng": -73.961452
+  "lat": 51.5034,
+  "lng": -0.1276
 }
 ```
 
@@ -385,8 +427,8 @@ Calculate distances and times between multiple locations.
 
 ```json
 {
-  "origins": ["New York, NY", "Boston, MA"],
-  "destinations": ["Philadelphia, PA", "Washington, DC"],
+  "origins": ["London, UK", "Manchester, UK"],
+  "destinations": ["Birmingham, UK", "Leeds, UK"],
   "mode": "driving"
 }
 ```
@@ -405,8 +447,8 @@ Snap GPS coordinates to the nearest road.
 ```json
 {
   "path": [
-    {"lat": 40.714224, "lng": -73.961452},
-    {"lat": 40.714624, "lng": -73.961852}
+    {"lat": 51.5034, "lng": -0.1276},
+    {"lat": 51.5035, "lng": -0.1275}
   ],
   "interpolate": true
 }
@@ -425,6 +467,26 @@ Get speed limit data for road segments.
 ```json
 {
   "place_ids": ["ChIJwQ2rKwAEdkgRo7h2RYD1oUM"]
+}
+```
+
+### `calculate_route_safety_factors`
+
+Calculate safety scores for a route based on traffic, road conditions, and speed limits.
+
+**Parameters:**
+
+- `origin` (required): Starting location
+- `destination` (required): Ending location
+- `departure_time` (optional): ISO 8601 timestamp (defaults to now)
+
+**Example:**
+
+```json
+{
+  "origin": "London, UK",
+  "destination": "Oxford, UK",
+  "departure_time": "2023-10-27T23:00:00Z"
 }
 ```
 
@@ -597,10 +659,10 @@ google-maps-mcp-server
 
 ### Getting Help
 
-- 📖 [Full Documentation](docs/)
-- 💬 [GitHub Discussions](https://github.com/ettysekhon/google-maps-mcp-server/discussions)
-- 🐛 [Issue Tracker](https://github.com/ettysekhon/google-maps-mcp-server/issues)
-- 📧 Email: <etty.sekhon@gmail.com>
+- [Full Documentation](docs/)
+- [GitHub Discussions](https://github.com/ettysekhon/google-maps-mcp-server/discussions)
+- [Issue Tracker](https://github.com/ettysekhon/google-maps-mcp-server/issues)
+- <etty.sekhon@gmail.com>
 
 ---
 
@@ -616,19 +678,3 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 - Powered by [Google Maps Platform](https://developers.google.com/maps)
 - Developed using [uv](https://docs.astral.sh/uv/) by Astral
 - Inspired by the amazing MCP community
-
----
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=ettysekhon/google-maps-mcp-server&type=Date)](https://star-history.com/#ettysekhon/google-maps-mcp-server&Date)
-
----
-
-## Project Stats
-
-![GitHub stars](https://img.shields.io/github/stars/ettysekhon/google-maps-mcp-server?style=social)
-![GitHub forks](https://img.shields.io/github/forks/ettysekhon/google-maps-mcp-server?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/ettysekhon/google-maps-mcp-server?style=social)
-![GitHub issues](https://img.shields.io/github/issues/ettysekhon/google-maps-mcp-server)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/ettysekhon/google-maps-mcp-server)
