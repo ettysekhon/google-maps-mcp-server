@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2025-11-30
+
+### Added for version 0.2.1
+
+- `get_route_elevation_gain` tool to calculate elevation stats and profiles for routes (useful for cycling/hiking).
+- Optional `traffic_model` parameter to `get_traffic_conditions` and `calculate_route_safety_factors` tools (supports `best_guess`, `optimistic`, `pessimistic`).
+
 ## [0.2.0] - 2025-11-29
 
 ### Added for version 0.2.0
@@ -47,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Claude Desktop integration
 - Google ADK integration examples
 
-[Unreleased]: https://github.com/ettysekhon/google-maps-mcp-server/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/ettysekhon/google-maps-mcp-server/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/ettysekhon/google-maps-mcp-server/releases/tag/v0.2.1
 [0.2.0]: https://github.com/ettysekhon/google-maps-mcp-server/releases/tag/v0.2.0
 [0.1.0]: https://github.com/ettysekhon/google-maps-mcp-server/releases/tag/v0.1.0

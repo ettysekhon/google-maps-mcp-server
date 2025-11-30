@@ -18,7 +18,7 @@ Empower your AI agents with real-world location intelligence: directions, places
 
 - **Production-Ready**: Robust error handling, automatic retries with exponential backoff, structured logging
 - **Universal Integration**: Works with Claude Desktop, Google ADK, and any MCP-compatible client
-- **Comprehensive API Coverage**: 10 tools spanning all major Google Maps APIs
+- **Comprehensive API Coverage**: 11 tools spanning all major Google Maps APIs
 - **Type-Safe**: Full type annotations with Pydantic validation and mypy compliance
 - **Zero Configuration**: Sensible defaults, works out of the box
 - **Thoroughly Tested**: >90% code coverage with unit and integration tests
@@ -41,6 +41,7 @@ Empower your AI agents with real-world location intelligence: directions, places
 | **Distance Matrix API** | `calculate_distance_matrix` | Multi-origin/destination distances | Fleet routing, delivery optimisation, travel planning |
 | **Roads API** | `snap_to_roads` | Snap GPS points to road network | GPS trace cleaning, route reconstruction |
 | **Roads API** | `get_speed_limits` | Retrieve speed limit data | Fleet safety monitoring, compliance checking |
+| **Elevation API** | `get_route_elevation_gain` | Calculate elevation gain and profile | Cycling/hiking planning, fuel efficiency |
 | **Compound** | `calculate_route_safety_factors` | Assess route safety risks | Fleet safety, insurance scoring, driver assistance |
 
 ---
@@ -364,13 +365,15 @@ Analyze real-time traffic conditions between two locations.
 - `origin` (required): Starting location
 - `destination` (required): Ending location
 - `departure_time` (optional): ISO 8601 timestamp (defaults to now)
+- `traffic_model` (optional): "best_guess" (default), "optimistic", "pessimistic"
 
 **Example:**
 
 ```json
 {
   "origin": "London, UK",
-  "destination": "Oxford, UK"
+  "destination": "Oxford, UK",
+  "traffic_model": "best_guess"
 }
 ```
 
@@ -479,6 +482,7 @@ Calculate safety scores for a route based on traffic, road conditions, and speed
 - `origin` (required): Starting location
 - `destination` (required): Ending location
 - `departure_time` (optional): ISO 8601 timestamp (defaults to now)
+- `traffic_model` (optional): "best_guess", "optimistic", "pessimistic" (default)
 
 **Example:**
 
@@ -486,7 +490,30 @@ Calculate safety scores for a route based on traffic, road conditions, and speed
 {
   "origin": "London, UK",
   "destination": "Oxford, UK",
-  "departure_time": "2023-10-27T23:00:00Z"
+  "departure_time": "2023-10-27T23:00:00Z",
+  "traffic_model": "pessimistic"
+}
+```
+
+### `get_route_elevation_gain`
+
+Calculate elevation gain and retrieve elevation profile for a route.
+
+**Parameters:**
+
+- `origin` (required): Starting location
+- `destination` (required): Ending location
+- `mode` (optional): "driving", "walking", "bicycling" (default)
+- `samples` (optional): Number of elevation samples (default: 50, max: 512)
+
+**Example:**
+
+```json
+{
+  "origin": "London, UK",
+  "destination": "Brighton, UK",
+  "mode": "bicycling",
+  "samples": 100
 }
 ```
 

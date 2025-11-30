@@ -15,7 +15,7 @@ Complete reference for all Google Maps MCP Server tools.
 
 ## Tools Overview
 
-The Google Maps MCP Server provides 10 tools across 5 Google Maps Platform APIs:
+The Google Maps MCP Server provides 11 tools across 6 Google Maps Platform APIs:
 
 | Tool Name | API | Purpose |
 |-----------|-----|---------|
@@ -28,6 +28,7 @@ The Google Maps MCP Server provides 10 tools across 5 Google Maps Platform APIs:
 | `calculate_distance_matrix` | Distance Matrix API | Multi-point distances |
 | `snap_to_roads` | Roads API | Clean GPS data |
 | `get_speed_limits` | Roads API | Speed limit retrieval |
+| `get_route_elevation_gain` | Elevation API | Route elevation profile |
 | `calculate_route_safety_factors` | Compound | Assess route safety risks |
 
 ---
@@ -237,13 +238,15 @@ Analyze real-time traffic conditions between two locations.
 | `origin` | string | Yes | Starting location |
 | `destination` | string | Yes | Ending location |
 | `departure_time` | string | No | ISO 8601 timestamp (defaults to now) |
+| `traffic_model` | string | No | "best_guess", "optimistic", "pessimistic" |
 
 #### Request Example (get_traffic_conditions)
 
 ```json
 {
   "origin": "London, UK",
-  "destination": "Oxford, UK"
+  "destination": "Oxford, UK",
+  "traffic_model": "best_guess"
 }
 ```
 
@@ -552,6 +555,63 @@ Get speed limit information for road segments.
 }
 ```
 
+---
+
+## Elevation API
+
+### get_route_elevation_gain
+
+Calculate elevation gain and retrieve elevation profile for a route.
+
+#### Parameters (get_route_elevation_gain)
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `origin` | string | Yes | Starting location |
+| `destination` | string | Yes | Ending location |
+| `mode` | string | No | "driving", "walking", "bicycling" (default) |
+| `samples` | integer | No | Number of elevation samples (default: 50, max: 512) |
+
+#### Request Example (get_route_elevation_gain)
+
+```json
+{
+  "origin": "London, UK",
+  "destination": "Brighton, UK",
+  "mode": "bicycling",
+  "samples": 100
+}
+```
+
+#### Response Example (get_route_elevation_gain)
+
+```json
+{
+  "status": "success",
+  "tool": "get_route_elevation_gain",
+  "data": {
+    "route_summary": "A23",
+    "total_distance": "85 km",
+    "elevation_stats": {
+      "total_gain_meters": 450.5,
+      "total_loss_meters": 445.2,
+      "max_elevation_meters": 210.0,
+      "min_elevation_meters": 15.0
+    },
+    "elevation_profile": [
+      {
+        "distance_percentage": 0,
+        "elevation_meters": 15.0
+      },
+      {
+        "distance_percentage": 10,
+        "elevation_meters": 45.2
+      }
+    ]
+  }
+}
+```
+
 ### calculate_route_safety_factors
 
 Assess route safety risks.
@@ -563,6 +623,7 @@ Assess route safety risks.
 | `origin` | string | Yes | Starting location |
 | `destination` | string | Yes | Ending location |
 | `departure_time` | string | No | ISO 8601 timestamp (defaults to now) |
+| `traffic_model` | string | No | "best_guess", "optimistic", "pessimistic" (default) |
 
 #### Request Example (calculate_route_safety_factors)
 
@@ -570,7 +631,8 @@ Assess route safety risks.
 {
   "origin": "London, UK",
   "destination": "Oxford, UK",
-  "departure_time": "2023-10-27T23:00:00Z"
+  "departure_time": "2023-10-27T23:00:00Z",
+  "traffic_model": "pessimistic"
 }
 ```
 

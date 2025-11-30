@@ -13,7 +13,7 @@ def test_server_initialization() -> None:
     server = GoogleMapsMCPServer(settings)
 
     assert server.settings == settings
-    assert len(server.tools) == 10  # All 10 tools loaded
+    assert len(server.tools) == 11  # All 11 tools loaded
 
 
 @pytest.mark.integration
@@ -34,6 +34,7 @@ def test_all_tools_registered() -> None:
         "get_place_details",
         "get_traffic_conditions",
         "calculate_route_safety_factors",
+        "get_route_elevation_gain",
     }
 
     assert tool_names == expected_names

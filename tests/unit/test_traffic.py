@@ -29,6 +29,7 @@ async def test_traffic_tool_schema(mock_settings: Settings) -> None:
     assert "origin" in schema["properties"]
     assert "destination" in schema["properties"]
     assert "departure_time" in schema["properties"]
+    assert "traffic_model" in schema["properties"]
     assert schema["required"] == ["origin", "destination"]
 
 
@@ -56,9 +57,6 @@ async def test_traffic_analysis_low_congestion(mock_settings: Settings) -> None:
         }
     ]
 
-    # Easier to patch _execute_with_retry or the underlying gmaps client
-    # Since gmaps client methods are synchronous, we should mock them as synchronous functions
-
     mock_gmaps = MagicMock()
     mock_gmaps.directions.return_value = mock_result
     tool.gmaps = mock_gmaps
@@ -73,6 +71,7 @@ async def test_traffic_analysis_low_congestion(mock_settings: Settings) -> None:
     )  # (1050 - 1000) / 60 rounded to 1 decimal place? 50/60 = 0.833 -> 0.8
     assert data["normal_duration"] == "16 mins"
     assert data["traffic_duration"] == "17 mins"
+    assert data["traffic_model_used"] == "best_guess"
 
 
 @pytest.mark.asyncio
@@ -112,25 +111,30 @@ async def test_traffic_analysis_heavy_congestion(mock_settings: Settings) -> Non
 
 
 @pytest.mark.asyncio
-async def test_traffic_tool_custom_time(mock_settings: Settings) -> None:
-    """Test traffic tool with custom departure time."""
+async def test_traffic_tool_custom_time_and_model(mock_settings: Settings) -> None:
+    """Test traffic tool with custom departure time and model."""
     tool = TrafficConditionsTool(mock_settings)
 
     mock_gmaps = MagicMock()
-    mock_gmaps.directions.return_value = (
-        []
-    )  # Return empty to trigger "No route found" check or just check call args
+    mock_gmaps.directions.return_value = []
     tool.gmaps = mock_gmaps
 
     custom_time = "2023-10-27T10:00:00Z"
 
-    await tool.execute({"origin": "A", "destination": "B", "departure_time": custom_time})
+    await tool.execute(
+        {
+            "origin": "A",
+            "destination": "B",
+            "departure_time": custom_time,
+            "traffic_model": "pessimistic",
+        }
+    )
 
     call_args = mock_gmaps.directions.call_args
     assert call_args.kwargs["departure_time"] == datetime.fromisoformat(
         custom_time.replace("Z", "+00:00")
     )
-    assert call_args.kwargs["traffic_model"] == "best_guess"
+    assert call_args.kwargs["traffic_model"] == "pessimistic"
 
 
 @pytest.mark.asyncio

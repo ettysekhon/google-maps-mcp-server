@@ -43,9 +43,13 @@ async def create_location_agent() -> Agent | None:
     # Get Gemini API key from environment (required for the agent model)
     if not (os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")):
         print("Error: GOOGLE_API_KEY or GEMINI_API_KEY not set")
-        print("This is required for the agent model (gemini-2.0-flash)")
+        print("This is required for the agent model")
         print("Please set it in your .env file or environment variables")
         return None
+
+    # Get model name from environment (default to gemini-2.0-flash)
+    model_name = os.getenv("AGENT_MODEL", "gemini-2.0-flash")
+    print(f"Using model: {model_name}")
 
     # Create Google Maps MCP toolset
     print("Creating Google Maps MCP toolset...")
@@ -60,7 +64,7 @@ async def create_location_agent() -> Agent | None:
     # Create ADK agent with Maps tools
     agent = Agent(
         name="location_intelligence_agent",
-        model="gemini-2.0-flash",
+        model=model_name,
         instruction="""You are a helpful location intelligence assistant with access to
         real-time Google Maps data. You can:
 

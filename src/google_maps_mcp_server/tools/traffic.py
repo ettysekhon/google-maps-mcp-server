@@ -42,6 +42,12 @@ class TrafficConditionsTool(BaseTool):
                     "type": "string",
                     "description": "ISO 8601 timestamp for departure (defaults to now)",
                 },
+                "traffic_model": {
+                    "type": "string",
+                    "enum": ["best_guess", "optimistic", "pessimistic"],
+                    "default": "best_guess",
+                    "description": "Traffic prediction model",
+                },
             },
             "required": ["origin", "destination"],
         }
@@ -51,6 +57,7 @@ class TrafficConditionsTool(BaseTool):
         try:
             origin = arguments["origin"]
             destination = arguments["destination"]
+            traffic_model = arguments.get("traffic_model", "best_guess")
 
             # Default to now if not provided
             departure_time = datetime.now()
@@ -64,6 +71,7 @@ class TrafficConditionsTool(BaseTool):
                 origin=origin,
                 destination=destination,
                 departure_time=departure_time,
+                traffic_model=traffic_model,
             )
 
             # Call Directions API
@@ -76,7 +84,7 @@ class TrafficConditionsTool(BaseTool):
                 destination=destination,
                 mode="driving",
                 departure_time=departure_time,
-                traffic_model="best_guess",
+                traffic_model=traffic_model,
             )
 
             if not result:
@@ -116,6 +124,7 @@ class TrafficConditionsTool(BaseTool):
                 "distance": leg["distance"]["text"],
                 "start_address": leg["start_address"],
                 "end_address": leg["end_address"],
+                "traffic_model_used": traffic_model,
             }
 
             logger.info(

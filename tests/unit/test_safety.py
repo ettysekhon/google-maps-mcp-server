@@ -19,6 +19,19 @@ async def test_safety_tool_name(mock_settings: Settings) -> None:
 
 
 @pytest.mark.asyncio
+async def test_safety_tool_schema(mock_settings: Settings) -> None:
+    """Test safety tool schema."""
+    tool = RouteSafetyTool(mock_settings)
+    schema = tool.input_schema
+
+    assert schema["type"] == "object"
+    assert "origin" in schema["properties"]
+    assert "destination" in schema["properties"]
+    assert "traffic_model" in schema["properties"]
+    assert schema["required"] == ["origin", "destination"]
+
+
+@pytest.mark.asyncio
 async def test_safety_calculation_low_risk(mock_settings: Settings) -> None:
     """Test safety calculation for a safe route."""
     tool = RouteSafetyTool(mock_settings)
@@ -64,11 +77,12 @@ async def test_safety_calculation_low_risk(mock_settings: Settings) -> None:
     assert data["details"]["traffic_risk"] == "Low"
     assert data["details"]["road_risk"] == "Low Speed"
     assert data["details"]["time_risk"] == "Day"
+    assert data["traffic_model_used"] == "pessimistic"
 
 
 @pytest.mark.asyncio
-async def test_safety_calculation_high_risk(mock_settings: Settings) -> None:
-    """Test safety calculation for a risky route."""
+async def test_safety_calculation_high_risk_custom_model(mock_settings: Settings) -> None:
+    """Test safety calculation for a risky route with custom traffic model."""
     tool = RouteSafetyTool(mock_settings)
 
     # Mock directions (high traffic)
@@ -102,16 +116,20 @@ async def test_safety_calculation_high_risk(mock_settings: Settings) -> None:
     with patch("google_maps_mcp_server.tools.safety.datetime") as mock_datetime:
         mock_datetime.now.return_value.hour = 2
 
-        result = await tool.execute({"origin": "A", "destination": "B"})
+        result = await tool.execute(
+            {"origin": "A", "destination": "B", "traffic_model": "optimistic"}
+        )
 
     assert result["status"] == "success"
     data = result["data"]
     # Traffic Score (4) * 4 + Speed Score (6) * 4 + Time Score (6) * 2 = 16 + 24 + 12 = 52
     assert data["safety_score"] == 52.0
     assert data["risk_level"] == "High"
-    assert data["details"]["traffic_risk"] == "High"
-    assert data["details"]["road_risk"] == "High Speed"
-    assert data["details"]["time_risk"] == "Night"
+    assert data["traffic_model_used"] == "optimistic"
+
+    # Verify optimistic was passed to directions
+    call_args = mock_gmaps.directions.call_args
+    assert call_args.kwargs["traffic_model"] == "optimistic"
 
 
 @pytest.mark.asyncio

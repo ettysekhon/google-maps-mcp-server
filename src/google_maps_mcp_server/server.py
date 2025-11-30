@@ -17,6 +17,7 @@ from .config import Settings
 from .tools import (
     DirectionsTool,
     DistanceMatrixTool,
+    ElevationTool,
     GeocodingTool,
     PlaceDetailsTool,
     PlacesTool,
@@ -40,6 +41,7 @@ class GoogleMapsMCPServer:
     - Geocoding API (address to coordinates)
     - Distance Matrix API (multi-origin/destination distances)
     - Roads API (snap to roads, speed limits)
+    - Elevation API (route elevation profiles)
     """
 
     def __init__(self, settings: Settings | None = None):
@@ -58,6 +60,7 @@ class GoogleMapsMCPServer:
             SpeedLimitsTool(self.settings),
             TrafficConditionsTool(self.settings),
             RouteSafetyTool(self.settings),
+            ElevationTool(self.settings),
         ]
 
         self._register_handlers()

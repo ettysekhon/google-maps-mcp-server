@@ -42,6 +42,12 @@ class RouteSafetyTool(BaseTool):
                     "type": "string",
                     "description": "ISO 8601 timestamp for departure (defaults to now)",
                 },
+                "traffic_model": {
+                    "type": "string",
+                    "enum": ["best_guess", "optimistic", "pessimistic"],
+                    "default": "pessimistic",
+                    "description": "Traffic prediction model (defaults to pessimistic for safety analysis)",
+                },
             },
             "required": ["origin", "destination"],
         }
@@ -51,6 +57,8 @@ class RouteSafetyTool(BaseTool):
         try:
             origin = arguments["origin"]
             destination = arguments["destination"]
+            traffic_model = arguments.get("traffic_model", "pessimistic")
+
             departure_time = datetime.now()
             if "departure_time" in arguments:
                 departure_time = datetime.fromisoformat(
@@ -61,6 +69,7 @@ class RouteSafetyTool(BaseTool):
                 "calculating_route_safety",
                 origin=origin,
                 destination=destination,
+                traffic_model=traffic_model,
             )
 
             # 1. Get Route & Traffic
@@ -70,7 +79,7 @@ class RouteSafetyTool(BaseTool):
                 destination=destination,
                 mode="driving",
                 departure_time=departure_time,
-                traffic_model="pessimistic",  # Safety-first: assume worst traffic
+                traffic_model=traffic_model,
             )
 
             if not directions_result:
@@ -180,6 +189,7 @@ class RouteSafetyTool(BaseTool):
                 },
                 "risk_factors": risk_factors,
                 "route_summary": route.get("summary"),
+                "traffic_model_used": traffic_model,
             }
 
             logger.info("route_safety_calculated", score=overall_score)
