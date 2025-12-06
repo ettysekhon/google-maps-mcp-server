@@ -59,6 +59,8 @@ docs/_build/
 site/
 AGENT_HANDOFF.md
 PUBLISHING.md
+HANDOVER_GOOGLE_MAPS_MCP.md
+
 
 # Distribution
 *.tar.gz

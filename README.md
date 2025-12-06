@@ -170,6 +170,22 @@ kubectl delete pod -l app=google-maps-mcp-server
 kubectl get pods -l app=google-maps-mcp-server -w
 ```
 
+### Testing with MCP Inspector
+
+Verify your deployment using the official MCP Inspector:
+
+```bash
+npx @modelcontextprotocol/inspector
+```
+
+- Transport Type: **SSE**
+- URL: `http://<EXTERNAL-IP>/sse` (or `http://localhost:8080/sse` for local)
+- Should see 11 tools listed
+
+![MCP Inspector - Verifying Remote Deployment](docs/screenshots/mcp_inspector_verifying_remote_deployment.png)
+
+![MCP Inspector - Making Remote Tool Call](docs/screenshots/mcp_inspector_making_remote_tool_call.png)
+
 Run `make help` to see all available commands.
 
 ---
@@ -643,7 +659,7 @@ docker build -t google-maps-mcp-server:latest .
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.
 
 ### Quick Contribution Guide
 

@@ -227,6 +227,7 @@ To expose publicly:
 2. Apply: `make deploy-apply`
 3. Get external IP: `kubectl get service google-maps-mcp-server -w`
 4. Wait for `EXTERNAL-IP` (may take 1-2 minutes)
+5. Test with MCP Inspector: `npx @modelcontextprotocol/inspector` → SSE → `http://<EXTERNAL-IP>/sse`
 
 **Security Warning:** Public endpoints are accessible to anyone. For production:
 
