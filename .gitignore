@@ -57,6 +57,8 @@ coverage.xml
 # Documentation
 docs/_build/
 site/
+AGENT_HANDOFF.md
+PUBLISHING.md
 
 # Distribution
 *.tar.gz

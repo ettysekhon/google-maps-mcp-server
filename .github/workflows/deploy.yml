@@ -1,0 +1,106 @@
+name: Deploy to GKE
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  GKE_CLUSTER: google-maps-cluster
+  GKE_ZONE: europe-west2
+  IMAGE: google-maps-mcp-server
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.9.11"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run linting
+        run: |
+          uv run ruff check src tests
+          uv run black --check src tests
+
+      - name: Run type checking
+        run: uv run mypy src
+
+      - name: Run tests
+        env:
+          GOOGLE_MAPS_API_KEY: test_key_for_ci
+        run: uv run pytest -v -m "not integration"
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Required for Workload Identity Federation
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: "access_token"
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker --quiet
+
+      - name: Build and push Docker image
+        run: |
+          docker build \
+            -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.IMAGE }}:${{ github.sha }} \
+            -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.IMAGE }}:latest \
+            -f docker/Dockerfile .
+          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.IMAGE }}:${{ github.sha }}
+          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.IMAGE }}:latest
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Deploy to GKE
+        run: |
+          # Substitute environment variables and apply manifests
+          export GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT_ID }}
+          envsubst < k8s/deployment.yaml | kubectl apply -f -
+
+      - name: Rollout restart to pull new image
+        run: kubectl rollout restart deployment/google-maps-mcp-server
+
+      - name: Wait for rollout to complete
+        run: kubectl rollout status deployment/google-maps-mcp-server --timeout=300s
+
+      - name: Verify deployment
+        run: |
+          echo "=== Deployment Status ==="
+          kubectl get deployment google-maps-mcp-server
+          echo ""
+          echo "=== Pods ==="
+          kubectl get pods -l app=google-maps-mcp-server
+          echo ""
+          echo "=== Service ==="
+          kubectl get service google-maps-mcp-server

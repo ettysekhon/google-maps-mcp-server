@@ -1,11 +1,15 @@
-version: "3.8"
-
 services:
   google-maps-mcp:
-    build: .
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - ../.env
     environment:
       - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY:-}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
-      - LOG_LEVEL=INFO
-    stdin_open: true
-    tty: true
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    # Override command if you want to use stdio instead
+    # command: ["uv", "run", "google-maps-mcp-server"]
+    # Default command from Dockerfile runs the API server

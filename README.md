@@ -97,7 +97,6 @@ Create a `.env` file in your working directory:
 
 ```bash
 GOOGLE_MAPS_API_KEY=your_maps_api_key_here
-GOOGLE_API_KEY=your_adk_api_key_here
 
 LOG_LEVEL=INFO
 MAX_RESULTS=20
@@ -107,7 +106,6 @@ Or set environment variables:
 
 ```bash
 export GOOGLE_MAPS_API_KEY="your_maps_api_key_here"
-export GOOGLE_API_KEY="your_adk_api_key_here"
 ```
 
 ### Run the Server
@@ -122,6 +120,57 @@ python -m google_maps_mcp_server
 # Or using uv
 uv run google-maps-mcp-server
 ```
+
+---
+
+## Deployment
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for full instructions, troubleshooting, and architecture details.
+
+### Local Docker Testing
+
+```bash
+# Set your API key (or create a .env file)
+export GOOGLE_MAPS_API_KEY=your-key
+
+# Build and run
+make docker-run
+
+# Verify (in another terminal)
+make verify-local
+```
+
+### GKE Deployment
+
+```bash
+# Set environment
+export GOOGLE_CLOUD_PROJECT=your-project-id
+export GOOGLE_CLOUD_REGION=europe-west2
+
+# First time: create secret
+make deploy-secret
+
+# Deploy (build, push, apply)
+make deploy-all
+
+# Check status
+make deploy-status
+```
+
+### Redeploying After Code Changes
+
+```bash
+# Rebuild and push new image
+make deploy-build
+
+# Force pod to pull new image
+kubectl delete pod -l app=google-maps-mcp-server
+
+# Watch for new pod to be ready
+kubectl get pods -l app=google-maps-mcp-server -w
+```
+
+Run `make help` to see all available commands.
 
 ---
 
@@ -261,7 +310,6 @@ docker build -t google-maps-mcp .
 # Run the container
 docker run -it \
   -e GOOGLE_MAPS_API_KEY=your_maps_key_here \
-  -e GOOGLE_API_KEY=your_adk_key_here \
   google-maps-mcp
 
 # Or use docker-compose
@@ -277,7 +325,6 @@ All configuration can be set via environment variables or `.env` file:
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
 | `GOOGLE_MAPS_API_KEY` | string | **required** | Google Maps Platform API key (for Maps tools) |
-| `GOOGLE_API_KEY` | string | **required** | Google ADK API key (for ADK integration) |
 | `LOG_LEVEL` | string | `INFO` | Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL) |
 | `MAX_RESULTS` | integer | `20` | Maximum results to return (1-60) |
 | `DEFAULT_RADIUS_METERS` | integer | `5000` | Default search radius in meters |

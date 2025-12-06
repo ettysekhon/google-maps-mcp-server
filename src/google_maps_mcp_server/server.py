@@ -47,8 +47,6 @@ class GoogleMapsMCPServer:
     def __init__(self, settings: Settings | None = None):
         self.settings = settings or Settings()
         self.app = Server("google-maps-mcp-server")
-
-        # Initialize tools
         self.tools = [
             PlacesTool(self.settings),
             PlaceDetailsTool(self.settings),

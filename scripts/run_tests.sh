@@ -7,13 +7,11 @@ echo "Google Maps MCP Server - Test Suite"
 echo "======================================"
 echo ""
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Check if .env exists and has API key
 if [ ! -f .env ]; then
     echo -e "${RED}❌ Error: .env file not found${NC}"
     echo "Run: cp .env.example .env"
@@ -27,7 +25,6 @@ if ! grep -q "GOOGLE_MAPS_API_KEY" .env || grep -q "your_api_key_here" .env; the
     echo ""
 fi
 
-# Parse command line arguments
 RUN_INTEGRATION=false
 VERBOSE=false
 COVERAGE=true
@@ -71,7 +68,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Build pytest command
 PYTEST_CMD="uv run pytest"
 
 if [ "$VERBOSE" = true ]; then
@@ -86,7 +82,6 @@ if [ "$COVERAGE" = true ]; then
     PYTEST_CMD="$PYTEST_CMD --cov=src/google_maps_mcp_server --cov-report=term-missing --cov-report=html --cov-report=xml"
 fi
 
-# Add markers based on integration flag
 if [ "$RUN_INTEGRATION" = false ]; then
     PYTEST_CMD="$PYTEST_CMD -m 'not integration'"
     echo "Running unit tests only (use --integration to run all tests)"
@@ -123,7 +118,6 @@ if uv run mypy src; then
     echo -e "${GREEN}✓ Type checking passed${NC}"
 else
     echo -e "${YELLOW}⚠️  Type checking found issues${NC}"
-    # Don't fail on type errors, just warn
 fi
 echo ""
 

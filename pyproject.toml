@@ -37,6 +37,9 @@ dependencies = [
     "httpx>=0.28.1",
     "google-adk>=1.19.0",
     "google-maps-places>=0.5.0",
+    "starlette>=0.37.0",
+    "uvicorn[standard]>=0.29.0",
+    "sse-starlette>=2.1.0",
 ]
 
 [project.optional-dependencies]

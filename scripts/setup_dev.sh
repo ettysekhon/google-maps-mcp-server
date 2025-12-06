@@ -7,7 +7,6 @@ echo "Google Maps MCP Server - Dev Setup"
 echo "======================================"
 echo ""
 
-# Check Python version
 echo "Checking Python version..."
 python_version=$(python3 --version 2>&1 | awk '{print $2}')
 required_version="3.10"
@@ -19,7 +18,6 @@ fi
 echo "✓ Python $python_version"
 echo ""
 
-# Check if uv is installed
 echo "Checking for uv package manager..."
 if ! command -v uv &> /dev/null; then
     echo "uv not found. Installing uv..."
@@ -31,19 +29,16 @@ else
 fi
 echo ""
 
-# Install dependencies
 echo "Installing dependencies..."
 uv sync --extra dev --extra docs
 echo "✓ Dependencies installed"
 echo ""
 
-# Install pre-commit hooks
 echo "Setting up pre-commit hooks..."
 uv run pre-commit install
 echo "✓ Pre-commit hooks installed"
 echo ""
 
-# Create .env file if it doesn't exist
 if [ ! -f .env ]; then
     echo "Creating .env file from template..."
     cp .env.example .env
@@ -56,14 +51,12 @@ else
     echo ""
 fi
 
-# Check if API key is set
 if grep -q "your_api_key_here" .env 2>/dev/null || ! grep -q "GOOGLE_MAPS_API_KEY" .env 2>/dev/null; then
     echo "⚠️  WARNING: GOOGLE_MAPS_API_KEY not configured in .env"
     echo "   Get your API key from: https://console.cloud.google.com/apis/credentials"
     echo ""
 fi
 
-# Run initial code quality checks
 echo "Running initial code quality checks..."
 echo ""
 
@@ -79,7 +72,6 @@ echo "Type checking with mypy..."
 uv run mypy src || echo "⚠️  Type checking found some issues"
 echo ""
 
-# Run tests (without integration tests)
 echo "Running unit tests..."
 if uv run pytest -m "not integration" --tb=short; then
     echo "✓ All unit tests passed"

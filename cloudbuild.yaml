@@ -1,0 +1,12 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/google-maps-mcp-server:latest'
+      - '-f'
+      - 'docker/Dockerfile'
+      - '.'
+
+images:
+  - 'gcr.io/$PROJECT_ID/google-maps-mcp-server:latest'

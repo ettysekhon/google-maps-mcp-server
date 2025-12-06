@@ -9,7 +9,7 @@ from google_maps_mcp_server.config import Settings
 def test_settings_requires_api_key() -> None:
     """Test that API key is required."""
     with pytest.raises(ValidationError):
-        Settings(google_maps_api_key="", google_api_key="")
+        Settings(google_maps_api_key="")
 
 
 def test_settings_validates_log_level() -> None:
