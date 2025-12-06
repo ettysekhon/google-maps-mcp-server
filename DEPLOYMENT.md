@@ -400,6 +400,12 @@ Configure the following secrets in your GitHub repository settings (`Settings > 
 
 Workload Identity Federation is more secure than using service account keys.
 
+**Important:** The service account needs three roles:
+
+- `roles/container.developer` - Deploy to GKE
+- `roles/storage.admin` - Access Cloud Storage
+- `roles/artifactregistry.writer` - Push images to GCR (now backed by Artifact Registry)
+
 ```bash
 export PROJECT_ID=your-project-id
 export GITHUB_ORG=your-github-username-or-org
@@ -417,6 +423,10 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:$SA_NAME@$PROJECT_ID.iam.gserviceaccount.com" \
     --role="roles/storage.admin"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$SA_NAME@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/artifactregistry.writer"
 
 gcloud iam workload-identity-pools create github-pool \
     --location="global" \
@@ -436,12 +446,20 @@ gcloud iam service-accounts add-iam-policy-binding $SA_NAME@$PROJECT_ID.iam.gser
     --member="principalSet://iam.googleapis.com/projects/$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')/locations/global/workloadIdentityPools/github-pool/attribute.repository/$GITHUB_ORG/$GITHUB_REPO" \
     --project=$PROJECT_ID
 
-# Get the Workload Identity Provider resource name (use this for GCP_WORKLOAD_IDENTITY_PROVIDER secret)
 gcloud iam workload-identity-pools providers describe github-provider \
     --location="global" \
     --workload-identity-pool="github-pool" \
     --project=$PROJECT_ID \
     --format="value(name)"
+```
+
+**Note:** Each GitHub repository must be explicitly allowed to impersonate the service account. If you're reusing an existing WIF setup for a new repo, add a binding:
+
+```bash
+gcloud iam service-accounts add-iam-policy-binding $SA_NAME@$PROJECT_ID.iam.gserviceaccount.com \
+    --role="roles/iam.workloadIdentityUser" \
+    --member="principalSet://iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_NAME/attribute.repository/GITHUB_ORG/NEW_REPO_NAME" \
+    --project=$PROJECT_ID
 ```
 
 ### Pipeline Flow
